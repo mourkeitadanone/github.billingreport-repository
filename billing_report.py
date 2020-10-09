@@ -2,13 +2,12 @@
 # coding: utf8
 
 '''
-Billing report file. Makes :
+The class tests Github API
 - authentication
 - List users
 - List repos
 - List teams and members
 - Show billing report
-The script uses Github API and Pygithub lib.
 '''
 
 import json
@@ -23,7 +22,7 @@ GITHUB_ADMINS_TEAM_ID = 3464005
 
 def getToken():
     try:
-        f = open('github-dev-token.txt')
+        f = open('github-token.txt')
         token = f.read()
         return token
     except:
@@ -70,7 +69,7 @@ class MyGithub:
 
     def getMembers(self):
         all_teams_req = self.getTeams('/orgs/danone/teams')
-        teams_list, cpt = [], 0
+        teams_list = []
         total_teams_pages = int(self.getTeamsPagination(all_teams_req))
         for page in range(total_teams_pages):
             teams = self.getTeams('/orgs/danone/teams?page={}'.format(page + 1))
@@ -79,10 +78,10 @@ class MyGithub:
                 danone_gh_team.setTeamInfos(team['name'], team['id'], team['description'])
                 members = self.getTeamMembers(team['id'])
                 danone_gh_team.billing = 250 * len(members)
-                for cpt in range(len(members)):
+                for i in range(len(members)):
                     danone_gh_member = DanoneGithubMember()
-                    member_email = self.getUserEmail(members[cpt]['login'])
-                    danone_gh_member.setGithubMemberInfos(members[cpt]['id'], members[cpt]['login'], member_email)
+                    member_email = self.getUserEmail(members[i]['login'])
+                    danone_gh_member.setGithubMemberInfos(members[i]['id'], members[i]['login'], member_email)
                     danone_gh_team.addMemberInList(danone_gh_member)
                 teams_list.append(danone_gh_team)
         return teams_list
@@ -117,6 +116,18 @@ class MyGithub:
 
         req = requests.post(self.githubUrl + '/user/repos', headers=self.headers, data=data)
         print(req.json())
+        return req
+
+    def addMemberToTeam(self, team_name, username):
+        team = DanoneGithubTeam()
+        team_id = team.getTeamByPattern(name=team_name)['id']
+        req = requests.put(self.githubUrl +
+                           '/organizations/' +
+                           ORGANIZATION_ID +
+                           '/team/' +
+                           team_id +
+                           '/memberships/' +
+                        username)
         return req
 
 
@@ -174,15 +185,36 @@ class DanoneGithubMember:
         self.login = login
         self.email = email
 
+    def sendInvitation(self, email, role, team_name):
+        t = DanoneGithubTeam()
+        my_g = MyGithub()
+        try:
+            team_id = [t.getTeamByPattern(name=team_name)['id']]
+            data = json.dumps({
+                "email": email,
+                "role": role,
+                "team_ids": team_id
+            })
+            req = requests.post(my_g.githubUrl + '/orgs/' + ORGANIZATION + '/invitations', headers=my_g.headers, data=data)
+            print(req.json())
+            return req
+        except Exception as e:
+            print(e.args)
+
+
 
 
 if __name__ == '__main__':
-    my_g = MyGithub()
-    teams_list = my_g.getMembers()
-    print(teams_list)
-    print(len(teams_list))
-    for i in range(len(teams_list)):
-        team = teams_list[i]
-        print(team.name, team.id, str(team.billing) +
-              '€', str(len(team.members)) + ' members', sep=' / ')
-    my_g.createRepo('github.billingreport-repository')
+    team = DanoneGithubTeam()
+    member = DanoneGithubMember()
+    team.getTeamByPattern(name='Github admins')
+    member.sendInvitation('Rangga.HIDAYAT@danone.com', 'direct_member', 'RPA ')
+    # my_g = MyGithub()
+    # teams_list = my_g.getMembers()
+    # print(teams_list)
+    # print(len(teams_list))
+    # for i in range(len(teams_list)):
+    #     team = teams_list[i]
+    #     print(team.name, team.id, str(team.billing) +
+    #           '€', str(len(team.members)) + ' members', sep=' / ')
+    # my_g.createRepo('github.billingreport-repository')
