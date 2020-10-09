@@ -2,12 +2,13 @@
 # coding: utf8
 
 '''
-The class tests Github API
+Billing report file. Makes :
 - authentication
 - List users
 - List repos
 - List teams and members
 - Show billing report
+The script uses Github API and Pygithub lib.
 '''
 
 import json
