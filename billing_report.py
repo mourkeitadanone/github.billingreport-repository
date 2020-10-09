@@ -212,8 +212,6 @@ if __name__ == '__main__':
     member.sendInvitation('Rangga.HIDAYAT@danone.com', 'direct_member', 'RPA ')
     # my_g = MyGithub()
     # teams_list = my_g.getMembers()
-    # print(teams_list)
-    # print(len(teams_list))
     # for i in range(len(teams_list)):
     #     team = teams_list[i]
     #     print(team.name, team.id, str(team.billing) +
