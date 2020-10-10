@@ -116,7 +116,6 @@ class MyGithub:
         })
 
         req = requests.post(self.githubUrl + '/user/repos', headers=self.headers, data=data)
-        print(req.json())
         return req
 
     def addMemberToTeam(self, team_name, username):
@@ -187,20 +186,19 @@ class DanoneGithubMember:
         self.email = email
 
     def sendInvitation(self, email, role, team_name):
-        t = DanoneGithubTeam()
+        team = DanoneGithubTeam()
         my_g = MyGithub()
         try:
-            team_id = [t.getTeamByPattern(name=team_name)['id']]
+            team_id = [team.getTeamByPattern(name=team_name)['id']]
             data = json.dumps({
                 "email": email,
                 "role": role,
                 "team_ids": team_id
             })
             req = requests.post(my_g.githubUrl + '/orgs/' + ORGANIZATION + '/invitations', headers=my_g.headers, data=data)
-            print(req.json())
             return req
         except Exception as e:
-            print(e.args)
+            return e.args
 
 
 
